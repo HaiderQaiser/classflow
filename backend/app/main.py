@@ -1,3 +1,4 @@
+from app.routers import class_groups
 from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -12,6 +13,8 @@ from app.schemas import (
 from app.auth import verify_password, create_access_token
 
 app = FastAPI(title="ClassFlow API", version="1.0.0")
+
+app.include_router(class_groups.router) # ye abhi add kia tha
 
 @app.get("/")
 def read_root():

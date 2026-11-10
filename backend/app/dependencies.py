@@ -1,5 +1,5 @@
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 import os
@@ -13,11 +13,12 @@ load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY", "classflow_secret_key")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 
-# Authorization Header se token extract karne ke liye helper
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+# Simple Bearer Token authentication (Swagger UI par direct token input dikhayega)
+security_scheme = HTTPBearer()
 
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
+def get_current_user(auth: HTTPAuthorizationCredentials = Depends(security_scheme), db: Session = Depends(get_db)) -> User:
     """JWT Token ko decode karke logged-in user details fetch karta hai"""
+    token = auth.credentials
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
