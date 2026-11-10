@@ -11,9 +11,11 @@ from app.schemas import (
     TokenResponse
 )
 from app.auth import verify_password, create_access_token
+from app.routers import class_groups, users
 
 app = FastAPI(title="ClassFlow API", version="1.0.0")
 
+app.include_router(users.router)
 app.include_router(class_groups.router) # ye abhi add kia tha
 
 @app.get("/")
