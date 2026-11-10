@@ -1,9 +1,15 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.database import get_db
 from app.models import User, ClassGroup
-from app.schemas import UserResponse, ClassGroupResponse
+from app.schemas import (
+    UserResponse, 
+    ClassGroupResponse, 
+    LoginRequest, 
+    TokenResponse
+)
+from app.auth import verify_password, create_access_token
 
 app = FastAPI(title="ClassFlow API", version="1.0.0")
 
@@ -49,3 +55,45 @@ def test_schemas(db: Session = Depends(get_db)):
         }
     except Exception as e:
         return {"status": "error", "details": str(e)}
+
+# -----------------------------
+# AUTHENTICATION ROUTE
+# -----------------------------
+@app.post("/api/auth/login", response_model=TokenResponse)
+def login(credentials: LoginRequest, db: Session = Depends(get_db)):
+    # 1. Database se user query karein by username
+    user = db.query(User).filter(User.username == credentials.username).first()
+    
+    # 2. Verify karein ke user exist karta hai aur active hai
+    if not user or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid username or account is inactive"
+        )
+    
+    # 3. Password match verification
+    is_valid = False
+    if user.password_hash.startswith("$2b$"):
+        is_valid = verify_password(credentials.password, user.password_hash)
+    else:
+        is_valid = (credentials.password == user.password_hash)
+
+    if not is_valid:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid username or password"
+        )
+    
+    # 4. JWT Access Token generate karein
+    access_token = create_access_token(
+        data={"sub": user.username, "role": user.role.value, "user_id": user.id}
+    )
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "role": user.role,
+        "username": user.username,
+        "full_name": f"{user.first_name} {user.last_name}",
+        "class_group_id": user.class_group_id
+    }
