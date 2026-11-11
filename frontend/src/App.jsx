@@ -2,6 +2,7 @@ import React, { useContext } from 'react';
 import { AuthContext } from './context/AuthContext';
 import LoginPage from './pages/LoginPage';
 import AdminDashboard from './pages/AdminDashboard';
+import StudentDashboard from './pages/StudentDashboard';
 
 function App() {
   const { user } = useContext(AuthContext);
@@ -14,12 +15,11 @@ function App() {
     return <AdminDashboard />;
   }
 
-  return (
-    <div style={{ padding: '30px', fontFamily: 'sans-serif' }}>
-      <h1>Student Dashboard (Coming Soon)</h1>
-      <p>Welcome, {user.full_name}!</p>
-    </div>
-  );
+  if (user.role === 'student') {
+    return <StudentDashboard />;
+  }
+
+  return null;
 }
 
 export default App;
