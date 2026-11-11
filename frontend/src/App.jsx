@@ -1,24 +1,23 @@
 import React, { useContext } from 'react';
 import { AuthContext } from './context/AuthContext';
 import LoginPage from './pages/LoginPage';
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
-  const { user, logout } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
 
   if (!user) {
     return <LoginPage />;
   }
 
+  if (user.role === 'admin') {
+    return <AdminDashboard />;
+  }
+
   return (
-    <div style={{ padding: '20px', fontFamily: 'sans-serif' }}>
-      <h1>ClassFlow Dashboard</h1>
-      <p>Logged in as: <strong>{user.full_name}</strong> ({user.role})</p>
-      <button 
-        onClick={logout}
-        style={{ padding: '8px 16px', backgroundColor: '#e74c3c', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-      >
-        Logout
-      </button>
+    <div style={{ padding: '30px', fontFamily: 'sans-serif' }}>
+      <h1>Student Dashboard (Coming Soon)</h1>
+      <p>Welcome, {user.full_name}!</p>
     </div>
   );
 }
