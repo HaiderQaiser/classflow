@@ -26,6 +26,10 @@ const AdminDashboard = () => {
     { subject: '', start_time: '16:00', end_time: '17:00', teacher_name: '', is_cancelled: false }
   ]);
 
+  // Holiday Form State
+  const [holidayDate, setHolidayDate] = useState(todayStr);
+  const [holidayReason, setHolidayReason] = useState('');
+
   // Alerts
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -118,7 +122,6 @@ const AdminDashboard = () => {
     setMessage('');
     setError('');
 
-    // Format times with :00 for backend specs (HH:MM:SS)
     const formattedSlots = slots.map(s => ({
       ...s,
       start_time: s.start_time.length === 5 ? `${s.start_time}:00` : s.start_time,
@@ -133,10 +136,26 @@ const AdminDashboard = () => {
         slots: formattedSlots
       });
       setMessage(`Schedule for Date ${scheduleDate} published successfully!`);
-      // Reset slots to initial state
       setSlots([{ subject: '', start_time: '16:00', end_time: '17:00', teacher_name: '', is_cancelled: false }]);
     } catch (err) {
       setError(err.response?.data?.detail || 'Schedule publish karne mein masla aaya.');
+    }
+  };
+
+  // 5. Holiday Submit Handler
+  const handleCreateHoliday = async (e) => {
+    e.preventDefault();
+    setMessage('');
+    setError('');
+    try {
+      await API.post('/api/schedules/holidays', {
+        holiday_date: holidayDate,
+        reason: holidayReason
+      });
+      setMessage(`Holiday declared for ${holidayDate} successfully!`);
+      setHolidayReason('');
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Holiday declare karne mein masla aaya.');
     }
   };
 
@@ -245,7 +264,40 @@ const AdminDashboard = () => {
           </form>
         </div>
 
-        {/* Section 2: Management Grid */}
+        {/* Section 2: Declare Center-Wide Holiday */}
+        <div style={{ ...styles.card, marginBottom: '25px' }}>
+          <h3>🏖️ Declare Center-Wide Holiday</h3>
+          <form onSubmit={handleCreateHoliday} style={styles.form}>
+            <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+              <div style={{ flex: 1, minWidth: '200px' }}>
+                <label style={styles.label}>Holiday Date:</label>
+                <input
+                  type="date"
+                  value={holidayDate}
+                  onChange={(e) => setHolidayDate(e.target.value)}
+                  style={styles.input}
+                  required
+                />
+              </div>
+              <div style={{ flex: 2, minWidth: '250px' }}>
+                <label style={styles.label}>Reason / Announcement:</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Heavy Rain / Public Holiday"
+                  value={holidayReason}
+                  onChange={(e) => setHolidayReason(e.target.value)}
+                  style={styles.input}
+                  required
+                />
+              </div>
+            </div>
+            <button type="submit" style={{ ...styles.submitBtn, backgroundColor: '#e67e22', alignSelf: 'flex-start' }}>
+              📢 Announce Holiday
+            </button>
+          </form>
+        </div>
+
+        {/* Section 3: Management Grid */}
         <div style={styles.grid}>
           {/* Class Groups */}
           <div style={styles.card}>
