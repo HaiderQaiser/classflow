@@ -153,3 +153,20 @@ def toggle_slot_cancellation(
     db.commit()
     db.refresh(slot)
     return {"message": "Slot status updated", "slot_id": slot.id, "is_cancelled": slot.is_cancelled}
+
+@router.delete("/holidays/{holiday_date}")
+def remove_holiday(
+    holiday_date: date,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can remove holidays")
+
+    holiday = db.query(CenterHoliday).filter(CenterHoliday.holiday_date == holiday_date).first()
+    if not holiday:
+        raise HTTPException(status_code=404, detail="Holiday not found")
+
+    db.delete(holiday)
+    db.commit()
+    return {"message": "Holiday removed successfully"}
