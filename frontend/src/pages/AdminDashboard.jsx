@@ -134,6 +134,22 @@ const AdminDashboard = () => {
     setSlots(slots.filter((_, i) => i !== index));
   };
 
+  const handleCopyPreviousSchedule = async () => {
+    setMessage('');
+    setError('');
+    try {
+      const response = await API.get(`/api/schedules/previous/${scheduleGroupId}?before_date=${scheduleDate}`);
+      if (response.data?.schedule?.slots && response.data.schedule.slots.length > 0) {
+        setSlots(response.data.schedule.slots);
+        setMessage(`Successfully loaded schedule slots from previous date (${response.data.schedule.schedule_date})!`);
+      } else {
+        setError('No previous schedule found for this class group.');
+      }
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to copy previous schedule.');
+    }
+  };
+
   const handleCreateSchedule = async (e) => {
     e.preventDefault();
     setMessage('');
@@ -226,7 +242,17 @@ const AdminDashboard = () => {
 
         {/* Schedule Builder */}
         <div style={{ ...styles.card, marginBottom: '25px' }}>
-          <h3>🗓️ Publish Daily Schedule</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
+            <h3>🗓️ Publish Daily Schedule</h3>
+            <button
+              type="button"
+              onClick={handleCopyPreviousSchedule}
+              style={styles.copyBtn}
+            >
+              📋 Copy Previous Schedule
+            </button>
+          </div>
+
           <form onSubmit={handleCreateSchedule} style={styles.form}>
             <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
               <div style={{ flex: 1, minWidth: '200px' }}>
@@ -569,6 +595,7 @@ const styles = {
   submitBtn: { padding: '10px', backgroundColor: '#3498db', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' },
   publishBtn: { padding: '10px 20px', backgroundColor: '#27ae60', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' },
   addSlotBtn: { padding: '10px 15px', backgroundColor: '#8e44ad', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' },
+  copyBtn: { padding: '8px 14px', backgroundColor: '#17a2b8', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' },
   deleteBtn: { backgroundColor: 'transparent', border: 'none', cursor: 'pointer', fontSize: '16px' },
   list: { listStyleType: 'none', padding: 0 },
   listItem: { backgroundColor: '#f8f9fa', padding: '10px 14px', marginBottom: '8px', borderRadius: '4px', border: '1px solid #e9ecef' },

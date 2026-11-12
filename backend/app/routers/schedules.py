@@ -237,3 +237,41 @@ def toggle_slot_cancellation(
     db.commit()
     db.refresh(slot)
     return {"message": "Slot status updated", "slot_id": slot.id, "is_cancelled": slot.is_cancelled}
+
+@router.get("/previous/{class_group_id}")
+def get_previous_schedule(
+    class_group_id: int,
+    before_date: Optional[date] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Only admins can view schedules")
+
+    ref_date = before_date or date.today()
+
+    # Selected date se pehle ka sab se recent schedule fetch karein
+    schedule = db.query(Schedule).filter(
+        Schedule.class_group_id == class_group_id,
+        Schedule.schedule_date < ref_date
+    ).order_by(Schedule.schedule_date.desc()).first()
+
+    if not schedule:
+        return {"schedule": None}
+
+    return {
+        "schedule": {
+            "id": schedule.id,
+            "schedule_date": str(schedule.schedule_date),
+            "slots": [
+                {
+                    "subject": slot.subject,
+                    "start_time": str(slot.start_time)[:5],
+                    "end_time": str(slot.end_time)[:5],
+                    "teacher_name": slot.teacher_name,
+                    "is_cancelled": False
+                }
+                for slot in schedule.slots
+            ]
+        }
+    }
