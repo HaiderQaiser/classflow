@@ -170,6 +170,17 @@ def get_schedule_by_group_and_date(
         }
     }
 
+@router.get("/holidays")
+def list_holidays(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Only admins can view holidays")
+
+    holidays = db.query(Holiday).order_by(Holiday.holiday_date.desc()).all()
+    return holidays
+
 @router.post("/holidays", status_code=status.HTTP_201_CREATED)
 def declare_holiday(
     payload: HolidayCreate,
@@ -191,6 +202,23 @@ def declare_holiday(
 
     db.commit()
     return {"message": "Holiday declared successfully"}
+
+@router.delete("/holidays/{holiday_date}")
+def remove_holiday(
+    holiday_date: date,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Only admins can remove holidays")
+
+    holiday = db.query(Holiday).filter(Holiday.holiday_date == holiday_date).first()
+    if not holiday:
+        raise HTTPException(status_code=404, detail="Holiday not found")
+
+    db.delete(holiday)
+    db.commit()
+    return {"message": "Holiday removed successfully"}
 
 @router.put("/slots/{slot_id}/cancel")
 def toggle_slot_cancellation(

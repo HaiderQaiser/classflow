@@ -26,6 +26,7 @@ const AdminDashboard = () => {
 
   const [holidayDate, setHolidayDate] = useState(todayStr);
   const [holidayReason, setHolidayReason] = useState('');
+  const [holidays, setHolidays] = useState([]);
 
   // Live Published Schedule View State
   const [publishedSchedule, setPublishedSchedule] = useState(null);
@@ -36,6 +37,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     fetchClassGroups();
+    fetchHolidays();
   }, []);
 
   useEffect(() => {
@@ -56,6 +58,15 @@ const AdminDashboard = () => {
       console.error('Error fetching class groups:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchHolidays = async () => {
+    try {
+      const response = await API.get('/api/schedules/holidays');
+      setHolidays(response.data);
+    } catch (err) {
+      console.error('Error fetching holidays:', err);
     }
   };
 
@@ -172,8 +183,21 @@ const AdminDashboard = () => {
       });
       setMessage(`Holiday declared for ${holidayDate} successfully!`);
       setHolidayReason('');
+      fetchHolidays();
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to declare holiday.');
+    }
+  };
+
+  const handleRemoveHoliday = async (hDate) => {
+    setMessage('');
+    setError('');
+    try {
+      await API.delete(`/api/schedules/holidays/${hDate}`);
+      setMessage(`Holiday for ${hDate} revoked successfully!`);
+      fetchHolidays();
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to revoke holiday.');
     }
   };
 
@@ -339,7 +363,7 @@ const AdminDashboard = () => {
           )}
         </div>
 
-        {/* Holiday Announcement */}
+        {/* Holiday Management Section */}
         <div style={{ ...styles.card, marginBottom: '25px' }}>
           <h3>🏖️ Declare Center-Wide Holiday</h3>
           <form onSubmit={handleCreateHoliday} style={styles.form}>
@@ -370,6 +394,49 @@ const AdminDashboard = () => {
               📢 Announce Holiday
             </button>
           </form>
+
+          {/* Active Holidays List */}
+          <h4 style={{ marginTop: '20px', marginBottom: '10px' }}>Active Declared Holidays</h4>
+          {holidays.length === 0 ? (
+            <p style={{ color: '#666', fontSize: '14px' }}>No active holidays declared.</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {holidays.map((h) => (
+                <div
+                  key={h.id}
+                  style={{
+                    display: 'flex',
+                    justify: 'space-between',
+                    alignItems: 'center',
+                    padding: '10px 15px',
+                    backgroundColor: '#fff3cd',
+                    borderRadius: '6px',
+                    borderLeft: '5px solid #e67e22',
+                    border: '1px solid #ffeeba'
+                  }}
+                >
+                  <div>
+                    <strong>Date: {h.holiday_date}</strong> — Reason: <em>{h.reason}</em>
+                  </div>
+                  <button
+                    onClick={() => handleRemoveHoliday(h.holiday_date)}
+                    style={{
+                      padding: '5px 12px',
+                      backgroundColor: '#dc3545',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '4px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      fontSize: '13px'
+                    }}
+                  >
+                    🗑️ Revoke Holiday
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Management Grid */}
