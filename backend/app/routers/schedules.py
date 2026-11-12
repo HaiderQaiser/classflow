@@ -4,7 +4,7 @@ from typing import List, Optional
 from datetime import date
 
 from app.database import get_db
-from app.models import Schedule, ScheduleSlot, Holiday, ScheduleStatus, UserRole
+from app.models import Schedule, ScheduleSlot, Holiday, ScheduleStatus, UserRole, User
 from app.schemas import ScheduleCreate, ScheduleResponse, HolidayCreate, HolidayResponse
 from app.dependencies import require_admin, get_current_user
 
@@ -135,3 +135,21 @@ def create_holiday(
     db.commit()
     db.refresh(new_holiday)
     return new_holiday
+
+@router.put("/slots/{slot_id}/cancel")
+def toggle_slot_cancellation(
+    slot_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can modify slots")
+
+    slot = db.query(ScheduleSlot).filter(ScheduleSlot.id == slot_id).first()
+    if not slot:
+        raise HTTPException(status_code=404, detail="Slot not found")
+
+    slot.is_cancelled = not slot.is_cancelled
+    db.commit()
+    db.refresh(slot)
+    return {"message": "Slot status updated", "slot_id": slot.id, "is_cancelled": slot.is_cancelled}

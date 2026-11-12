@@ -7,18 +7,16 @@ const AdminDashboard = () => {
   const [classGroups, setClassGroups] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // New Class Group Form State
+  // Forms State
   const [className, setClassName] = useState('');
   const [groupName, setGroupName] = useState('');
 
-  // New Student Form State
   const [studentUsername, setStudentUsername] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [studentPassword, setStudentPassword] = useState('');
   const [selectedGroupId, setSelectedGroupId] = useState('');
 
-  // Schedule Creation Form State
   const todayStr = new Date().toISOString().split('T')[0];
   const [scheduleGroupId, setScheduleGroupId] = useState('');
   const [scheduleDate, setScheduleDate] = useState(todayStr);
@@ -26,7 +24,6 @@ const AdminDashboard = () => {
     { subject: '', start_time: '16:00', end_time: '17:00', teacher_name: '', is_cancelled: false }
   ]);
 
-  // Holiday Form State
   const [holidayDate, setHolidayDate] = useState(todayStr);
   const [holidayReason, setHolidayReason] = useState('');
 
@@ -53,16 +50,13 @@ const AdminDashboard = () => {
     }
   };
 
-  // 1. Create Class Group Handler
+  // Handlers
   const handleCreateGroup = async (e) => {
     e.preventDefault();
     setMessage('');
     setError('');
     try {
-      await API.post('/api/class-groups/', {
-        class_name: className,
-        group_name: groupName
-      });
+      await API.post('/api/class-groups/', { class_name: className, group_name: groupName });
       setMessage(`Class Group '${className} - ${groupName}' created successfully!`);
       setClassName('');
       setGroupName('');
@@ -72,7 +66,6 @@ const AdminDashboard = () => {
     }
   };
 
-  // 2. Create Student Handler
   const handleCreateStudent = async (e) => {
     e.preventDefault();
     setMessage('');
@@ -97,7 +90,6 @@ const AdminDashboard = () => {
     }
   };
 
-  // 3. Dynamic Slots Handlers
   const handleSlotChange = (index, field, value) => {
     const updatedSlots = [...slots];
     updatedSlots[index][field] = value;
@@ -105,10 +97,7 @@ const AdminDashboard = () => {
   };
 
   const addSlotRow = () => {
-    setSlots([
-      ...slots,
-      { subject: '', start_time: '17:00', end_time: '18:00', teacher_name: '', is_cancelled: false }
-    ]);
+    setSlots([...slots, { subject: '', start_time: '17:00', end_time: '18:00', teacher_name: '', is_cancelled: false }]);
   };
 
   const removeSlotRow = (index) => {
@@ -116,7 +105,6 @@ const AdminDashboard = () => {
     setSlots(slots.filter((_, i) => i !== index));
   };
 
-  // 4. Schedule Submit Handler
   const handleCreateSchedule = async (e) => {
     e.preventDefault();
     setMessage('');
@@ -142,7 +130,6 @@ const AdminDashboard = () => {
     }
   };
 
-  // 5. Holiday Submit Handler
   const handleCreateHoliday = async (e) => {
     e.preventDefault();
     setMessage('');
@@ -161,7 +148,6 @@ const AdminDashboard = () => {
 
   return (
     <div style={styles.container}>
-      {/* Navbar */}
       <header style={styles.header}>
         <h2>ClassFlow — Admin Portal</h2>
         <div>
@@ -171,11 +157,10 @@ const AdminDashboard = () => {
       </header>
 
       <main style={styles.content}>
-        {/* Alerts */}
         {message && <div style={styles.successAlert}>{message}</div>}
         {error && <div style={styles.errorAlert}>{error}</div>}
 
-        {/* Section 1: Daily Schedule Builder */}
+        {/* Schedule Builder */}
         <div style={{ ...styles.card, marginBottom: '25px' }}>
           <h3>🗓️ Publish Daily Schedule</h3>
           <form onSubmit={handleCreateSchedule} style={styles.form}>
@@ -242,11 +227,7 @@ const AdminDashboard = () => {
                   style={{ ...styles.input, flex: 1 }}
                 />
                 {slots.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeSlotRow(index)}
-                    style={styles.deleteBtn}
-                  >
+                  <button type="button" onClick={() => removeSlotRow(index)} style={styles.deleteBtn}>
                     ❌
                   </button>
                 )}
@@ -264,7 +245,7 @@ const AdminDashboard = () => {
           </form>
         </div>
 
-        {/* Section 2: Declare Center-Wide Holiday */}
+        {/* Holiday Announcement */}
         <div style={{ ...styles.card, marginBottom: '25px' }}>
           <h3>🏖️ Declare Center-Wide Holiday</h3>
           <form onSubmit={handleCreateHoliday} style={styles.form}>
@@ -297,9 +278,8 @@ const AdminDashboard = () => {
           </form>
         </div>
 
-        {/* Section 3: Management Grid */}
+        {/* Management Grid */}
         <div style={styles.grid}>
-          {/* Class Groups */}
           <div style={styles.card}>
             <h3>Class Groups Management</h3>
             <form onSubmit={handleCreateGroup} style={styles.form}>
@@ -341,7 +321,6 @@ const AdminDashboard = () => {
             )}
           </div>
 
-          {/* Student Registration */}
           <div style={styles.card}>
             <h3>Register New Student</h3>
             <form onSubmit={handleCreateStudent} style={styles.form}>
