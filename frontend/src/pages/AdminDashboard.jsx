@@ -27,6 +27,9 @@ const AdminDashboard = () => {
   const [holidayDate, setHolidayDate] = useState(todayStr);
   const [holidayReason, setHolidayReason] = useState('');
 
+  // Live Published Schedule View State
+  const [publishedSchedule, setPublishedSchedule] = useState(null);
+
   // Alerts
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -34,6 +37,12 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetchClassGroups();
   }, []);
+
+  useEffect(() => {
+    if (scheduleGroupId && scheduleDate) {
+      fetchPublishedSchedule(scheduleGroupId, scheduleDate);
+    }
+  }, [scheduleGroupId, scheduleDate]);
 
   const fetchClassGroups = async () => {
     try {
@@ -50,6 +59,15 @@ const AdminDashboard = () => {
     }
   };
 
+  const fetchPublishedSchedule = async (groupId, dateStr) => {
+    try {
+      const response = await API.get(`/api/schedules/group/${groupId}?schedule_date=${dateStr}`);
+      setPublishedSchedule(response.data?.schedule || null);
+    } catch (err) {
+      console.error('Error fetching published schedule:', err);
+    }
+  };
+
   // Handlers
   const handleCreateGroup = async (e) => {
     e.preventDefault();
@@ -62,7 +80,7 @@ const AdminDashboard = () => {
       setGroupName('');
       fetchClassGroups();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Class Group create karne mein masla aaya.');
+      setError(err.response?.data?.detail || 'Failed to create Class Group.');
     }
   };
 
@@ -86,7 +104,7 @@ const AdminDashboard = () => {
       setLastName('');
       setStudentPassword('');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Student account create karne mein masla aaya.');
+      setError(err.response?.data?.detail || 'Failed to create student account.');
     }
   };
 
@@ -125,8 +143,21 @@ const AdminDashboard = () => {
       });
       setMessage(`Schedule for Date ${scheduleDate} published successfully!`);
       setSlots([{ subject: '', start_time: '16:00', end_time: '17:00', teacher_name: '', is_cancelled: false }]);
+      fetchPublishedSchedule(scheduleGroupId, scheduleDate);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Schedule publish karne mein masla aaya.');
+      setError(err.response?.data?.detail || 'Failed to publish schedule.');
+    }
+  };
+
+  const handleToggleSlotCancel = async (slotId) => {
+    setMessage('');
+    setError('');
+    try {
+      await API.put(`/api/schedules/slots/${slotId}/cancel`);
+      setMessage('Slot status updated successfully!');
+      fetchPublishedSchedule(scheduleGroupId, scheduleDate);
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to update slot status.');
     }
   };
 
@@ -142,8 +173,17 @@ const AdminDashboard = () => {
       setMessage(`Holiday declared for ${holidayDate} successfully!`);
       setHolidayReason('');
     } catch (err) {
-      setError(err.response?.data?.detail || 'Holiday declare karne mein masla aaya.');
+      setError(err.response?.data?.detail || 'Failed to declare holiday.');
     }
+  };
+
+  const formatTime = (timeStr) => {
+    if (!timeStr) return '';
+    const [hours, minutes] = timeStr.split(':');
+    let h = parseInt(hours, 10);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return `${h}:${minutes} ${ampm}`;
   };
 
   return (
@@ -243,6 +283,60 @@ const AdminDashboard = () => {
               </button>
             </div>
           </form>
+        </div>
+
+        {/* Live Published Schedule & Actions View */}
+        <div style={{ ...styles.card, marginBottom: '25px' }}>
+          <h3>📋 Live Published Schedule — Actions</h3>
+          {!publishedSchedule ? (
+            <p style={{ color: '#666' }}>No published schedule found for the selected date and class group.</p>
+          ) : (
+            <div>
+              <p style={{ color: '#27ae60', fontWeight: 'bold' }}>
+                Status: Published (Date: {publishedSchedule.schedule_date})
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
+                {publishedSchedule.slots.map((slot) => (
+                  <div
+                    key={slot.id}
+                    style={{
+                      display: 'flex',
+                      justify: 'space-between',
+                      alignItems: 'center',
+                      padding: '12px 16px',
+                      borderRadius: '6px',
+                      backgroundColor: slot.is_cancelled ? '#fdf2f2' : '#f8f9fa',
+                      borderLeft: slot.is_cancelled ? '5px solid #e74c3c' : '5px solid #2ecc71',
+                      border: '1px solid #e9ecef'
+                    }}
+                  >
+                    <div>
+                      <strong>{slot.subject}</strong> — <em>{slot.teacher_name}</em> ({formatTime(slot.start_time)} to {formatTime(slot.end_time)})
+                      {slot.is_cancelled && (
+                        <span style={{ marginLeft: '10px', color: '#e74c3c', fontWeight: 'bold', fontSize: '12px' }}>
+                          [CANCELLED]
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handleToggleSlotCancel(slot.id)}
+                      style={{
+                        padding: '6px 14px',
+                        borderRadius: '4px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontWeight: 'bold',
+                        color: '#fff',
+                        backgroundColor: slot.is_cancelled ? '#27ae60' : '#e74c3c'
+                      }}
+                    >
+                      {slot.is_cancelled ? 'Restore Slot' : 'Cancel Slot'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Holiday Announcement */}
