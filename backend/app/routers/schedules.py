@@ -3,9 +3,10 @@ from sqlalchemy.orm import Session
 from datetime import date
 from typing import List, Optional
 from pydantic import BaseModel
+import json
 
 from app.database import get_db
-from app.models import Schedule, ScheduleSlot, Holiday, UserRole, User
+from app.models import Schedule, ScheduleSlot, Holiday, UserRole, User, ScheduleRevision
 from app.dependencies import require_admin, get_current_user
 
 router = APIRouter(prefix="/api/schedules", tags=["Schedules & Holidays"])
@@ -50,6 +51,30 @@ def create_or_update_schedule(
     ).first()
 
     if existing_schedule:
+        # 1. Revision Snapshot: Save existing slots to schedule_revisions before update
+        previous_slots = [
+            {
+                "subject": slot.subject,
+                "start_time": str(slot.start_time),
+                "end_time": str(slot.end_time),
+                "teacher_name": slot.teacher_name,
+                "is_cancelled": slot.is_cancelled
+            }
+            for slot in existing_schedule.slots
+        ]
+
+        current_rev_count = db.query(ScheduleRevision).filter(
+            ScheduleRevision.schedule_id == existing_schedule.id
+        ).count()
+
+        revision = ScheduleRevision(
+            schedule_id=existing_schedule.id,
+            revision_number=current_rev_count + 1,
+            slots_snapshot=json.dumps(previous_slots)
+        )
+        db.add(revision)
+
+        # 2. Delete existing slots for re-publishing
         db.query(ScheduleSlot).filter(ScheduleSlot.schedule_id == existing_schedule.id).delete()
         existing_schedule.status = payload.status
         schedule_obj = existing_schedule
@@ -250,7 +275,6 @@ def get_previous_schedule(
 
     ref_date = before_date or date.today()
 
-    # Selected date se pehle ka sab se recent schedule fetch karein
     schedule = db.query(Schedule).filter(
         Schedule.class_group_id == class_group_id,
         Schedule.schedule_date < ref_date
@@ -275,3 +299,27 @@ def get_previous_schedule(
             ]
         }
     }
+
+@router.get("/{schedule_id}/revisions")
+def get_schedule_revisions(
+    schedule_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if not is_admin(current_user):
+        raise HTTPException(status_code=403, detail="Only admins can view schedule revisions")
+
+    revisions = db.query(ScheduleRevision).filter(
+        ScheduleRevision.schedule_id == schedule_id
+    ).order_by(ScheduleRevision.revision_number.desc()).all()
+
+    return [
+        {
+            "id": rev.id,
+            "schedule_id": rev.schedule_id,
+            "revision_number": rev.revision_number,
+            "slots_snapshot": json.loads(rev.slots_snapshot),
+            "created_at": rev.created_at.isoformat() if rev.created_at else None
+        }
+        for rev in revisions
+    ]

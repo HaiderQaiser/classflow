@@ -1,11 +1,26 @@
 from pydantic import BaseModel
-from typing import Optional, List
 from datetime import date, time, datetime
+from typing import List, Optional
 from app.models import UserRole, ScheduleStatus
 
-# -----------------------------
-# CLASS GROUP SCHEMAS
-# -----------------------------
+class UserBase(BaseModel):
+    username: str
+    first_name: str
+    last_name: str
+    role: UserRole
+
+class UserCreate(UserBase):
+    password: str
+    class_group_id: Optional[int] = None
+
+class UserResponse(UserBase):
+    id: int
+    is_active: bool
+    class_group_id: Optional[int] = None
+
+    class Config:
+        from_attributes = True
+
 class ClassGroupBase(BaseModel):
     class_name: str
     group_name: str
@@ -15,91 +30,11 @@ class ClassGroupCreate(ClassGroupBase):
 
 class ClassGroupResponse(ClassGroupBase):
     id: int
-    created_at: datetime
+    created_at: Optional[datetime] = None  # Optional kar diya taake missing attribute par error na aaye
 
     class Config:
         from_attributes = True
 
-# -----------------------------
-# USER SCHEMAS
-# -----------------------------
-class UserBase(BaseModel):
-    username: str
-    first_name: str
-    last_name: str
-    role: UserRole
-    class_group_id: Optional[int] = None
-    is_active: bool = True
-
-class UserCreate(UserBase):
-    password: str
-
-class UserResponse(UserBase):
-    id: int
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-# -----------------------------
-# SCHEDULE SLOT SCHEMAS
-# -----------------------------
-class ScheduleSlotBase(BaseModel):
-    subject: str
-    start_time: time
-    end_time: time
-    teacher_name: Optional[str] = None
-    is_cancelled: bool = False
-
-class ScheduleSlotCreate(ScheduleSlotBase):
-    pass
-
-class ScheduleSlotResponse(ScheduleSlotBase):
-    id: int
-    schedule_id: int
-
-    class Config:
-        from_attributes = True
-
-# -----------------------------
-# SCHEDULE HEADER SCHEMAS
-# -----------------------------
-class ScheduleBase(BaseModel):
-    class_group_id: int
-    schedule_date: date
-    status: ScheduleStatus = ScheduleStatus.draft
-
-class ScheduleCreate(ScheduleBase):
-    slots: List[ScheduleSlotCreate]
-
-class ScheduleResponse(ScheduleBase):
-    id: int
-    updated_at: datetime
-    slots: List[ScheduleSlotResponse] = []
-
-    class Config:
-        from_attributes = True
-
-# -----------------------------
-# HOLIDAY SCHEMAS
-# -----------------------------
-class HolidayBase(BaseModel):
-    holiday_date: date
-    reason: Optional[str] = None
-
-class HolidayCreate(HolidayBase):
-    pass
-
-class HolidayResponse(HolidayBase):
-    id: int
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-# -----------------------------
-# AUTHENTICATION SCHEMAS
-# -----------------------------
 class LoginRequest(BaseModel):
     username: str
     password: str
@@ -107,7 +42,54 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
-    role: UserRole
-    username: str
-    full_name: str
-    class_group_id: Optional[int] = None
+    role: str
+
+class ScheduleSlotBase(BaseModel):
+    subject: str
+    start_time: time
+    end_time: time
+    teacher_name: str
+    is_cancelled: bool = False
+
+class ScheduleSlotCreate(ScheduleSlotBase):
+    pass
+
+class ScheduleSlotResponse(ScheduleSlotBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+class ScheduleBase(BaseModel):
+    class_group_id: int
+    schedule_date: date
+    status: ScheduleStatus = ScheduleStatus.published
+
+class ScheduleCreate(ScheduleBase):
+    slots: List[ScheduleSlotCreate]
+
+class ScheduleResponse(ScheduleBase):
+    id: int
+    slots: List[ScheduleSlotResponse] = []
+
+    class Config:
+        from_attributes = True
+
+class HolidayCreate(BaseModel):
+    holiday_date: date
+    reason: str
+
+class HolidayResponse(HolidayCreate):
+    id: int
+
+    class Config:
+        from_attributes = True
+class ScheduleRevisionResponse(BaseModel):
+    id: int
+    schedule_id: int
+    revision_number: int
+    slots_snapshot: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
