@@ -61,6 +61,15 @@ CREATE TABLE holidays (
     reason VARCHAR(255) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+-- 6. Schedule Revision 
+CREATE TABLE IF NOT EXISTS schedule_revisions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    schedule_id INT NOT NULL,
+    revision_number INT NOT NULL,
+    slots_snapshot TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (schedule_id) REFERENCES schedules(id) ON DELETE CASCADE
+);
 -- Sample Data
 -- 0. class_groups data 
 INSERT INTO class_groups ( class_name, group_name)
@@ -73,3 +82,8 @@ VALUES ('admin', 'Tuition', 'Owner', 'temp_hash_123', 'admin', NULL);
 -- 2. Student Account (Yeh Class 9 - Biology ka student hai, isliye class_group_id = 1)
 INSERT INTO users (username, first_name, last_name, password_hash, role, class_group_id)
 VALUES ('2026-09-01', 'Ali', 'Raza', 'temp_hash_456', 'student', 1);
+
+select * from class_groups;
+select * from schedules;
+select * from schedule_slots;
+select * from schedule_revisions;

@@ -31,6 +31,11 @@ const AdminDashboard = () => {
   // Live Published Schedule View State
   const [publishedSchedule, setPublishedSchedule] = useState(null);
 
+  // Schedule Revision History Modal State
+  const [showRevisionModal, setShowRevisionModal] = useState(false);
+  const [revisions, setRevisions] = useState([]);
+  const [loadingRevisions, setLoadingRevisions] = useState(false);
+
   // Alerts
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -79,6 +84,20 @@ const AdminDashboard = () => {
     }
   };
 
+  const fetchScheduleRevisions = async (scheduleId) => {
+    setLoadingRevisions(true);
+    setShowRevisionModal(true);
+    try {
+      const response = await API.get(`/api/schedules/${scheduleId}/revisions`);
+      setRevisions(response.data || []);
+    } catch (err) {
+      console.error('Error fetching schedule revisions:', err);
+      setError('Failed to fetch revision history.');
+    } finally {
+      setLoadingRevisions(false);
+    }
+  };
+
   // Handlers
   const handleCreateGroup = async (e) => {
     e.preventDefault();
@@ -86,7 +105,7 @@ const AdminDashboard = () => {
     setError('');
     try {
       await API.post('/api/class-groups/', { class_name: className, group_name: groupName });
-      setMessage(`Class Group '${className} - ${groupName}' created successfully!`);
+      setMessage(`Class Group '${className} — ${groupName}' created successfully!`);
       setClassName('');
       setGroupName('');
       fetchClassGroups();
@@ -337,7 +356,19 @@ const AdminDashboard = () => {
 
         {/* Live Published Schedule & Actions View */}
         <div style={{ ...styles.card, marginBottom: '25px' }}>
-          <h3>📋 Live Published Schedule — Actions</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', marginBottom: '10px' }}>
+            <h3 style={{ margin: 0 }}>📋 Live Published Schedule — Actions</h3>
+            {publishedSchedule && (
+              <button
+                type="button"
+                onClick={() => fetchScheduleRevisions(publishedSchedule.id)}
+                style={styles.historyBtn}
+              >
+                📜 View History Logs
+              </button>
+            )}
+          </div>
+
           {!publishedSchedule ? (
             <p style={{ color: '#666' }}>No published schedule found for the selected date and class group.</p>
           ) : (
@@ -351,7 +382,7 @@ const AdminDashboard = () => {
                     key={slot.id}
                     style={{
                       display: 'flex',
-                      justify: 'space-between',
+                      justifyContent: 'space-between',
                       alignItems: 'center',
                       padding: '12px 16px',
                       borderRadius: '6px',
@@ -432,7 +463,7 @@ const AdminDashboard = () => {
                   key={h.id}
                   style={{
                     display: 'flex',
-                    justify: 'space-between',
+                    justifyContent: 'space-between',
                     alignItems: 'center',
                     padding: '10px 15px',
                     backgroundColor: '#fff3cd',
@@ -577,6 +608,53 @@ const AdminDashboard = () => {
           </div>
         </div>
       </main>
+
+      {/* Schedule Revision History Modal Overlay */}
+      {showRevisionModal && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modalContent}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+              <h3 style={{ margin: 0 }}>📜 Schedule Revision History</h3>
+              <button onClick={() => setShowRevisionModal(false)} style={styles.closeModalBtn}>✖ Close</button>
+            </div>
+
+            {loadingRevisions ? (
+              <p>Loading revision logs...</p>
+            ) : revisions.length === 0 ? (
+              <p style={{ color: '#666', padding: '15px 0' }}>
+                No revisions found for this schedule. (This schedule has not been edited / re-published yet).
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', maxHeight: '420px', overflowY: 'auto' }}>
+                {revisions.map((rev) => (
+                  <div key={rev.id} style={styles.revisionCard}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', borderBottom: '1px solid #e0e0e0', paddingBottom: '6px' }}>
+                      <span style={{ fontWeight: 'bold', color: '#34495e' }}>Revision #{rev.revision_number}</span>
+                      <small style={{ color: '#7f8c8d' }}>
+                        Archived at: {rev.created_at ? new Date(rev.created_at).toLocaleString() : 'N/A'}
+                      </small>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {Array.isArray(rev.slots_snapshot) && rev.slots_snapshot.length > 0 ? (
+                        rev.slots_snapshot.map((slot, idx) => (
+                          <div key={idx} style={styles.revisionSlot}>
+                            <span><strong>{slot.subject}</strong> — <em>{slot.teacher_name}</em> ({formatTime(slot.start_time)} to {formatTime(slot.end_time)})</span>
+                            {slot.is_cancelled && (
+                              <span style={{ color: '#e74c3c', fontWeight: 'bold', fontSize: '11px' }}>[CANCELLED]</span>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <p style={{ color: '#888', fontSize: '13px', margin: 0 }}>Empty slots snapshot.</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -596,11 +674,18 @@ const styles = {
   publishBtn: { padding: '10px 20px', backgroundColor: '#27ae60', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' },
   addSlotBtn: { padding: '10px 15px', backgroundColor: '#8e44ad', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' },
   copyBtn: { padding: '8px 14px', backgroundColor: '#17a2b8', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' },
+  historyBtn: { padding: '8px 14px', backgroundColor: '#6c5ce7', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' },
   deleteBtn: { backgroundColor: 'transparent', border: 'none', cursor: 'pointer', fontSize: '16px' },
   list: { listStyleType: 'none', padding: 0 },
   listItem: { backgroundColor: '#f8f9fa', padding: '10px 14px', marginBottom: '8px', borderRadius: '4px', border: '1px solid #e9ecef' },
   successAlert: { padding: '12px', backgroundColor: '#d4edda', color: '#155724', borderRadius: '6px', marginBottom: '20px' },
-  errorAlert: { padding: '12px', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '6px', marginBottom: '20px' }
+  errorAlert: { padding: '12px', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '6px', marginBottom: '20px' },
+  // Modal Styles
+  modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 },
+  modalContent: { backgroundColor: '#fff', padding: '25px', borderRadius: '8px', width: '90%', maxWidth: '650px', maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' },
+  closeModalBtn: { backgroundColor: '#e74c3c', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' },
+  revisionCard: { border: '1px solid #e0e0e0', borderRadius: '6px', padding: '12px', backgroundColor: '#f8f9fa' },
+  revisionSlot: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #eee', fontSize: '13px' }
 };
 
 export default AdminDashboard;
