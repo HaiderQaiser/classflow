@@ -245,12 +245,20 @@ const AdminDashboard = () => {
     return `${h}:${minutes} ${ampm}`;
   };
 
+  const displayName = user?.first_name 
+    ? `${user.first_name} ${user.last_name || ''}`.trim() 
+    : (user?.username || 'Admin');
+
   return (
     <div style={styles.container}>
+      {/* Header */}
       <header style={styles.header}>
-        <h2>ClassFlow — Admin Portal</h2>
-        <div>
-          <span style={{ marginRight: '15px' }}>Logged in as: <strong>{user.full_name}</strong></span>
+        <div style={styles.brand}>
+          <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '700' }}>ClassFlow</h2>
+          <span style={styles.badge}>Admin Portal</span>
+        </div>
+        <div style={styles.userInfo}>
+          <span>Logged in as: <strong>{user?.first_name ? `${user.first_name} ${user.last_name || ''}` : (user?.username || 'Admin')}</strong></span>
           <button onClick={logout} style={styles.logoutBtn}>Logout</button>
         </div>
       </header>
@@ -259,10 +267,10 @@ const AdminDashboard = () => {
         {message && <div style={styles.successAlert}>{message}</div>}
         {error && <div style={styles.errorAlert}>{error}</div>}
 
-        {/* Schedule Builder */}
-        <div style={{ ...styles.card, marginBottom: '25px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
-            <h3>🗓️ Publish Daily Schedule</h3>
+        {/* Schedule Builder Card */}
+        <div style={styles.card}>
+          <div style={styles.cardHeader}>
+            <h3 style={styles.cardTitle}>🗓️ Publish Daily Schedule</h3>
             <button
               type="button"
               onClick={handleCopyPreviousSchedule}
@@ -273,8 +281,8 @@ const AdminDashboard = () => {
           </div>
 
           <form onSubmit={handleCreateSchedule} style={styles.form}>
-            <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ flex: 1, minWidth: '200px' }}>
+            <div style={styles.rowTwoCol}>
+              <div style={styles.fieldGroup}>
                 <label style={styles.label}>Select Class Group:</label>
                 <select
                   value={scheduleGroupId}
@@ -283,14 +291,14 @@ const AdminDashboard = () => {
                   required
                 >
                   {classGroups.map((group) => (
-                    <option key={group.id} value={group.id}>
+                    <option key={group.id} value={group.id} style={styles.option}>
                       {group.class_name} — {group.group_name}
                     </option>
                   ))}
                 </select>
               </div>
 
-              <div style={{ flex: 1, minWidth: '200px' }}>
+              <div style={styles.fieldGroup}>
                 <label style={styles.label}>Schedule Date:</label>
                 <input
                   type="date"
@@ -302,7 +310,7 @@ const AdminDashboard = () => {
               </div>
             </div>
 
-            <h4 style={{ marginTop: '15px', marginBottom: '5px' }}>Class Slots</h4>
+            <h4 style={{ marginTop: '16px', marginBottom: '8px', color: '#1e293b' }}>Class Slots</h4>
             {slots.map((slot, index) => (
               <div key={index} style={styles.slotRow}>
                 <input
@@ -311,7 +319,7 @@ const AdminDashboard = () => {
                   value={slot.subject}
                   onChange={(e) => handleSlotChange(index, 'subject', e.target.value)}
                   required
-                  style={{ ...styles.input, flex: 2 }}
+                  style={{ ...styles.input, flex: '2 1 180px' }}
                 />
                 <input
                   type="text"
@@ -319,31 +327,31 @@ const AdminDashboard = () => {
                   value={slot.teacher_name}
                   onChange={(e) => handleSlotChange(index, 'teacher_name', e.target.value)}
                   required
-                  style={{ ...styles.input, flex: 2 }}
+                  style={{ ...styles.input, flex: '2 1 180px' }}
                 />
                 <input
                   type="time"
                   value={slot.start_time}
                   onChange={(e) => handleSlotChange(index, 'start_time', e.target.value)}
                   required
-                  style={{ ...styles.input, flex: 1 }}
+                  style={{ ...styles.input, flex: '1 1 120px' }}
                 />
                 <input
                   type="time"
                   value={slot.end_time}
                   onChange={(e) => handleSlotChange(index, 'end_time', e.target.value)}
                   required
-                  style={{ ...styles.input, flex: 1 }}
+                  style={{ ...styles.input, flex: '1 1 120px' }}
                 />
                 {slots.length > 1 && (
-                  <button type="button" onClick={() => removeSlotRow(index)} style={styles.deleteBtn}>
+                  <button type="button" onClick={() => removeSlotRow(index)} style={styles.deleteBtn} title="Remove slot">
                     ❌
                   </button>
                 )}
               </div>
             ))}
 
-            <div style={{ display: 'flex', gap: '15px', marginTop: '10px' }}>
+            <div style={styles.btnRow}>
               <button type="button" onClick={addSlotRow} style={styles.addSlotBtn}>
                 ➕ Add Another Subject Slot
               </button>
@@ -355,9 +363,9 @@ const AdminDashboard = () => {
         </div>
 
         {/* Live Published Schedule & Actions View */}
-        <div style={{ ...styles.card, marginBottom: '25px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', marginBottom: '10px' }}>
-            <h3 style={{ margin: 0 }}>📋 Live Published Schedule — Actions</h3>
+        <div style={styles.card}>
+          <div style={styles.cardHeader}>
+            <h3 style={styles.cardTitle}>📋 Live Published Schedule — Actions</h3>
             {publishedSchedule && (
               <button
                 type="button"
@@ -370,13 +378,13 @@ const AdminDashboard = () => {
           </div>
 
           {!publishedSchedule ? (
-            <p style={{ color: '#666' }}>No published schedule found for the selected date and class group.</p>
+            <p style={{ color: '#64748b', margin: '10px 0 0 0' }}>No published schedule found for the selected date and class group.</p>
           ) : (
             <div>
-              <p style={{ color: '#27ae60', fontWeight: 'bold' }}>
+              <p style={{ color: '#16a34a', fontWeight: '600', marginBottom: '12px' }}>
                 Status: Published (Date: {publishedSchedule.schedule_date})
               </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {publishedSchedule.slots.map((slot) => (
                   <div
                     key={slot.id}
@@ -386,15 +394,15 @@ const AdminDashboard = () => {
                       alignItems: 'center',
                       padding: '12px 16px',
                       borderRadius: '6px',
-                      backgroundColor: slot.is_cancelled ? '#fdf2f2' : '#f8f9fa',
-                      borderLeft: slot.is_cancelled ? '5px solid #e74c3c' : '5px solid #2ecc71',
-                      border: '1px solid #e9ecef'
+                      backgroundColor: slot.is_cancelled ? '#fef2f2' : '#f8fafc',
+                      borderLeft: slot.is_cancelled ? '5px solid #ef4444' : '5px solid #22c55e',
+                      border: '1px solid #e2e8f0'
                     }}
                   >
                     <div>
-                      <strong>{slot.subject}</strong> — <em>{slot.teacher_name}</em> ({formatTime(slot.start_time)} to {formatTime(slot.end_time)})
+                      <strong style={{ color: '#1e293b' }}>{slot.subject}</strong> — <em style={{ color: '#475569' }}>{slot.teacher_name}</em> ({formatTime(slot.start_time)} to {formatTime(slot.end_time)})
                       {slot.is_cancelled && (
-                        <span style={{ marginLeft: '10px', color: '#e74c3c', fontWeight: 'bold', fontSize: '12px' }}>
+                        <span style={{ marginLeft: '10px', color: '#ef4444', fontWeight: 'bold', fontSize: '12px' }}>
                           [CANCELLED]
                         </span>
                       )}
@@ -407,8 +415,8 @@ const AdminDashboard = () => {
                         border: 'none',
                         cursor: 'pointer',
                         fontWeight: 'bold',
-                        color: '#fff',
-                        backgroundColor: slot.is_cancelled ? '#27ae60' : '#e74c3c'
+                        color: '#ffffff',
+                        backgroundColor: slot.is_cancelled ? '#16a34a' : '#dc2626'
                       }}
                     >
                       {slot.is_cancelled ? 'Restore Slot' : 'Cancel Slot'}
@@ -420,12 +428,12 @@ const AdminDashboard = () => {
           )}
         </div>
 
-        {/* Holiday Management Section */}
-        <div style={{ ...styles.card, marginBottom: '25px' }}>
-          <h3>🏖️ Declare Center-Wide Holiday</h3>
+        {/* Declare Holiday Card */}
+        <div style={styles.card}>
+          <h3 style={styles.cardTitle}>🏖️ Declare Center-Wide Holiday</h3>
           <form onSubmit={handleCreateHoliday} style={styles.form}>
-            <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-              <div style={{ flex: 1, minWidth: '200px' }}>
+            <div style={styles.rowTwoCol}>
+              <div style={{ flex: '1 1 200px' }}>
                 <label style={styles.label}>Holiday Date:</label>
                 <input
                   type="date"
@@ -435,7 +443,7 @@ const AdminDashboard = () => {
                   required
                 />
               </div>
-              <div style={{ flex: 2, minWidth: '250px' }}>
+              <div style={{ flex: '2 1 250px' }}>
                 <label style={styles.label}>Reason / Announcement:</label>
                 <input
                   type="text"
@@ -447,15 +455,14 @@ const AdminDashboard = () => {
                 />
               </div>
             </div>
-            <button type="submit" style={{ ...styles.submitBtn, backgroundColor: '#e67e22', alignSelf: 'flex-start' }}>
+            <button type="submit" style={{ ...styles.submitBtn, backgroundColor: '#ea580c', alignSelf: 'flex-start' }}>
               📢 Announce Holiday
             </button>
           </form>
 
-          {/* Active Holidays List */}
-          <h4 style={{ marginTop: '20px', marginBottom: '10px' }}>Active Declared Holidays</h4>
+          <h4 style={{ marginTop: '20px', marginBottom: '10px', color: '#1e293b' }}>Active Declared Holidays</h4>
           {holidays.length === 0 ? (
-            <p style={{ color: '#666', fontSize: '14px' }}>No active holidays declared.</p>
+            <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>No active holidays declared.</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {holidays.map((h) => (
@@ -466,21 +473,21 @@ const AdminDashboard = () => {
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     padding: '10px 15px',
-                    backgroundColor: '#fff3cd',
+                    backgroundColor: '#fff7ed',
                     borderRadius: '6px',
-                    borderLeft: '5px solid #e67e22',
-                    border: '1px solid #ffeeba'
+                    borderLeft: '5px solid #ea580c',
+                    border: '1px solid #ffedd5'
                   }}
                 >
-                  <div>
+                  <div style={{ color: '#1e293b' }}>
                     <strong>Date: {h.holiday_date}</strong> — Reason: <em>{h.reason}</em>
                   </div>
                   <button
                     onClick={() => handleRemoveHoliday(h.holiday_date)}
                     style={{
                       padding: '5px 12px',
-                      backgroundColor: '#dc3545',
-                      color: '#fff',
+                      backgroundColor: '#dc2626',
+                      color: '#ffffff',
                       border: 'none',
                       borderRadius: '4px',
                       fontWeight: 'bold',
@@ -498,10 +505,11 @@ const AdminDashboard = () => {
 
         {/* Management Grid */}
         <div style={styles.grid}>
+          {/* Class Groups Management */}
           <div style={styles.card}>
-            <h3>Class Groups Management</h3>
+            <h3 style={styles.cardTitle}>Class Groups Management</h3>
             <form onSubmit={handleCreateGroup} style={styles.form}>
-              <h4>Add New Class Group</h4>
+              <h4 style={{ margin: '5px 0 0 0', color: '#334155' }}>Add New Class Group</h4>
               <input
                 type="text"
                 placeholder="Class Name (e.g. Class 11)"
@@ -521,39 +529,43 @@ const AdminDashboard = () => {
               <button type="submit" style={styles.submitBtn}>Create Class Group</button>
             </form>
 
-            <hr style={{ margin: '20px 0', border: 'none', borderTop: '1px solid #eee' }} />
+            <hr style={{ margin: '20px 0', border: 'none', borderTop: '1px solid #f1f5f9' }} />
 
-            <h4>Active Groups List</h4>
+            <h4 style={{ margin: '0 0 10px 0', color: '#334155' }}>Active Groups List</h4>
             {loading ? (
-              <p>Loading class groups...</p>
+              <p style={{ color: '#64748b' }}>Loading class groups...</p>
             ) : classGroups.length === 0 ? (
-              <p>No class groups found.</p>
+              <p style={{ color: '#64748b' }}>No class groups found.</p>
             ) : (
               <ul style={styles.list}>
                 {classGroups.map((group) => (
                   <li key={group.id} style={styles.listItem}>
-                    <strong>{group.class_name}</strong> — {group.group_name} (ID: {group.id})
+                    <strong style={{ color: '#1e293b' }}>{group.class_name}</strong> — {group.group_name} <span style={{ color: '#64748b', fontSize: '12px' }}>(ID: {group.id})</span>
                   </li>
                 ))}
               </ul>
             )}
           </div>
 
-          <div style={styles.card}>
-            <h3>Register New Student</h3>
-            <form onSubmit={handleCreateStudent} style={styles.form}>
-              <label style={styles.label}>Roll No / Username:</label>
-              <input
-                type="text"
-                placeholder="e.g. std_1003"
-                value={studentUsername}
-                onChange={(e) => setStudentUsername(e.target.value)}
-                required
-                style={styles.input}
-              />
+          {/* Register New Student */}
+          <div style={{ ...styles.card, alignSelf: 'flex-start', height: 'fit-content' }}>
+            <h3 style={styles.cardTitle}>Register New Student</h3>
+            <form onSubmit={handleCreateStudent} style={styles.form} autoComplete="off">
+              <div style={styles.fieldGroup}>
+                <label style={styles.label}>Roll No / Username:</label>
+                <input
+                  type="text"
+                  placeholder="e.g. std_1003"
+                  value={studentUsername}
+                  onChange={(e) => setStudentUsername(e.target.value)}
+                  required
+                  style={styles.input}
+                  autoComplete="off"
+                />
+              </div>
 
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <div style={{ flex: '1 1 140px' }}>
                   <label style={styles.label}>First Name:</label>
                   <input
                     type="text"
@@ -564,7 +576,7 @@ const AdminDashboard = () => {
                     style={styles.input}
                   />
                 </div>
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: '1 1 140px' }}>
                   <label style={styles.label}>Last Name:</label>
                   <input
                     type="text"
@@ -577,31 +589,36 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
-              <label style={styles.label}>Password:</label>
-              <input
-                type="password"
-                placeholder="Password"
-                value={studentPassword}
-                onChange={(e) => setStudentPassword(e.target.value)}
-                required
-                style={styles.input}
-              />
+              <div style={styles.fieldGroup}>
+                <label style={styles.label}>Password:</label>
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={studentPassword}
+                  onChange={(e) => setStudentPassword(e.target.value)}
+                  required
+                  style={styles.input}
+                  autoComplete="new-password"
+                />
+              </div>
 
-              <label style={styles.label}>Assign Class Group:</label>
-              <select
-                value={selectedGroupId}
-                onChange={(e) => setSelectedGroupId(e.target.value)}
-                style={styles.input}
-                required
-              >
-                {classGroups.map((group) => (
-                  <option key={group.id} value={group.id}>
-                    {group.class_name} — {group.group_name}
-                  </option>
-                ))}
-              </select>
+              <div style={styles.fieldGroup}>
+                <label style={styles.label}>Assign Class Group:</label>
+                <select
+                  value={selectedGroupId}
+                  onChange={(e) => setSelectedGroupId(e.target.value)}
+                  style={styles.input}
+                  required
+                >
+                  {classGroups.map((group) => (
+                    <option key={group.id} value={group.id} style={styles.option}>
+                      {group.class_name} — {group.group_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-              <button type="submit" style={{ ...styles.submitBtn, backgroundColor: '#27ae60' }}>
+              <button type="submit" style={{ ...styles.submitBtn, backgroundColor: '#16a34a' }}>
                 Register Student Account
               </button>
             </form>
@@ -613,24 +630,24 @@ const AdminDashboard = () => {
       {showRevisionModal && (
         <div style={styles.modalOverlay}>
           <div style={styles.modalContent}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-              <h3 style={{ margin: 0 }}>📜 Schedule Revision History</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0, color: '#1e293b' }}>📜 Schedule Revision History</h3>
               <button onClick={() => setShowRevisionModal(false)} style={styles.closeModalBtn}>✖ Close</button>
             </div>
 
             {loadingRevisions ? (
-              <p>Loading revision logs...</p>
+              <p style={{ color: '#64748b' }}>Loading revision logs...</p>
             ) : revisions.length === 0 ? (
-              <p style={{ color: '#666', padding: '15px 0' }}>
+              <p style={{ color: '#64748b', padding: '15px 0' }}>
                 No revisions found for this schedule. (This schedule has not been edited / re-published yet).
               </p>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', maxHeight: '420px', overflowY: 'auto' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: '420px', overflowY: 'auto' }}>
                 {revisions.map((rev) => (
                   <div key={rev.id} style={styles.revisionCard}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', borderBottom: '1px solid #e0e0e0', paddingBottom: '6px' }}>
-                      <span style={{ fontWeight: 'bold', color: '#34495e' }}>Revision #{rev.revision_number}</span>
-                      <small style={{ color: '#7f8c8d' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', borderBottom: '1px solid #e2e8f0', paddingBottom: '6px' }}>
+                      <span style={{ fontWeight: 'bold', color: '#1e293b' }}>Revision #{rev.revision_number}</span>
+                      <small style={{ color: '#64748b' }}>
                         Archived at: {rev.created_at ? new Date(rev.created_at).toLocaleString() : 'N/A'}
                       </small>
                     </div>
@@ -640,12 +657,12 @@ const AdminDashboard = () => {
                           <div key={idx} style={styles.revisionSlot}>
                             <span><strong>{slot.subject}</strong> — <em>{slot.teacher_name}</em> ({formatTime(slot.start_time)} to {formatTime(slot.end_time)})</span>
                             {slot.is_cancelled && (
-                              <span style={{ color: '#e74c3c', fontWeight: 'bold', fontSize: '11px' }}>[CANCELLED]</span>
+                              <span style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '11px' }}>[CANCELLED]</span>
                             )}
                           </div>
                         ))
                       ) : (
-                        <p style={{ color: '#888', fontSize: '13px', margin: 0 }}>Empty slots snapshot.</p>
+                        <p style={{ color: '#64748b', fontSize: '13px', margin: 0 }}>Empty slots snapshot.</p>
                       )}
                     </div>
                   </div>
@@ -660,32 +677,277 @@ const AdminDashboard = () => {
 };
 
 const styles = {
-  container: { fontFamily: 'sans-serif', minHeight: '100vh', backgroundColor: '#f4f6f9' },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '15px 30px', backgroundColor: '#2c3e50', color: '#fff' },
-  logoutBtn: { backgroundColor: '#e74c3c', color: '#fff', border: 'none', padding: '8px 14px', borderRadius: '4px', cursor: 'pointer' },
-  content: { padding: '30px' },
-  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '25px' },
-  card: { backgroundColor: '#fff', padding: '25px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' },
-  form: { display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '15px' },
-  slotRow: { display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '5px' },
-  label: { fontSize: '13px', fontWeight: 'bold', color: '#555' },
-  input: { padding: '10px', borderRadius: '4px', border: '1px solid #ccc', fontSize: '14px' },
-  submitBtn: { padding: '10px', backgroundColor: '#3498db', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' },
-  publishBtn: { padding: '10px 20px', backgroundColor: '#27ae60', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' },
-  addSlotBtn: { padding: '10px 15px', backgroundColor: '#8e44ad', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' },
-  copyBtn: { padding: '8px 14px', backgroundColor: '#17a2b8', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' },
-  historyBtn: { padding: '8px 14px', backgroundColor: '#6c5ce7', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' },
-  deleteBtn: { backgroundColor: 'transparent', border: 'none', cursor: 'pointer', fontSize: '16px' },
-  list: { listStyleType: 'none', padding: 0 },
-  listItem: { backgroundColor: '#f8f9fa', padding: '10px 14px', marginBottom: '8px', borderRadius: '4px', border: '1px solid #e9ecef' },
-  successAlert: { padding: '12px', backgroundColor: '#d4edda', color: '#155724', borderRadius: '6px', marginBottom: '20px' },
-  errorAlert: { padding: '12px', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '6px', marginBottom: '20px' },
-  // Modal Styles
-  modalOverlay: { position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 },
-  modalContent: { backgroundColor: '#fff', padding: '25px', borderRadius: '8px', width: '90%', maxWidth: '650px', maxHeight: '85vh', overflowY: 'auto', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' },
-  closeModalBtn: { backgroundColor: '#e74c3c', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' },
-  revisionCard: { border: '1px solid #e0e0e0', borderRadius: '6px', padding: '12px', backgroundColor: '#f8f9fa' },
-  revisionSlot: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid #eee', fontSize: '13px' }
+  container: {
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+    minHeight: '100vh',
+    backgroundColor: '#f4f6f9',
+    color: '#1e293b'
+  },
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '16px 32px',
+    backgroundColor: '#1e293b',
+    color: '#ffffff',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+  },
+  brand: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px'
+  },
+  badge: {
+    backgroundColor: '#2563eb',
+    color: '#ffffff',
+    fontSize: '11px',
+    padding: '3px 8px',
+    borderRadius: '12px',
+    fontWeight: '600',
+    textTransform: 'uppercase'
+  },
+  userInfo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
+    fontSize: '14px',
+    color: '#ffffff'
+  },
+  logoutBtn: {
+    backgroundColor: '#dc2626',
+    color: '#ffffff',
+    border: 'none',
+    padding: '8px 16px',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontWeight: '600',
+    fontSize: '13px'
+  },
+  content: {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    padding: '24px 16px'
+  },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+    gap: '24px',
+    alignItems: 'flex-start'
+  },
+  card: {
+    backgroundColor: '#ffffff',
+    padding: '24px',
+    borderRadius: '10px',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+    border: '1px solid #e2e8f0',
+    marginBottom: '24px',
+  },
+  cardHeader: {
+    display: 'flex',
+    justify: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '12px',
+    marginBottom: '16px'
+  },
+  cardTitle: {
+    margin: 0,
+    fontSize: '18px',
+    fontWeight: '700',
+    color: '#1e293b'
+  },
+  form: { 
+    display: 'flex', 
+    flexDirection: 'column', 
+    justifyContent: 'flex-start', 
+    alignItems: 'stretch',
+    gap: '14px',
+    height: 'auto' 
+  },
+  rowTwoCol: {
+    display: 'flex',
+    gap: '16px',
+    flexWrap: 'wrap'
+  },
+  fieldGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px'
+  },
+  slotRow: {
+    display: 'flex',
+    gap: '10px',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    marginBottom: '4px'
+  },
+  label: {
+    fontSize: '13px',
+    fontWeight: '600',
+    color: '#334155'
+  },
+  input: {
+    width: '100%',
+    boxSizing: 'border-box',
+    padding: '10px 12px',
+    borderRadius: '6px',
+    border: '1px solid #cbd5e1',
+    fontSize: '14px',
+    outline: 'none',
+    backgroundColor: '#ffffff',
+    color: '#1e293b'
+  },
+  option: {
+    backgroundColor: '#ffffff',
+    color: '#1e293b'
+  },
+  btnRow: {
+    display: 'flex',
+    gap: '12px',
+    marginTop: '8px',
+    flexWrap: 'wrap'
+  },
+  submitBtn: {
+    padding: '10px 18px',
+    backgroundColor: '#2563eb',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '6px',
+    fontWeight: '600',
+    fontSize: '14px',
+    cursor: 'pointer'
+  },
+  publishBtn: {
+    padding: '10px 20px',
+    backgroundColor: '#16a34a',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '6px',
+    fontWeight: '600',
+    fontSize: '14px',
+    cursor: 'pointer'
+  },
+  addSlotBtn: {
+    padding: '10px 16px',
+    backgroundColor: '#7c3aed',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '6px',
+    fontWeight: '600',
+    fontSize: '14px',
+    cursor: 'pointer'
+  },
+  copyBtn: {
+    padding: '8px 14px',
+    backgroundColor: '#0891b2',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '6px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    fontSize: '13px'
+  },
+  historyBtn: {
+    padding: '8px 14px',
+    backgroundColor: '#4f46e5',
+    color: '#ffffff',
+    border: 'none',
+    borderRadius: '6px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    fontSize: '13px'
+  },
+  deleteBtn: {
+    backgroundColor: 'transparent',
+    border: 'none',
+    cursor: 'pointer',
+    fontSize: '16px',
+    padding: '4px 8px'
+  },
+  list: {
+    listStyleType: 'none',
+    padding: 0,
+    margin: 0
+  },
+  listItem: {
+    backgroundColor: '#f8fafc',
+    padding: '10px 14px',
+    marginBottom: '8px',
+    borderRadius: '6px',
+    border: '1px solid #e2e8f0',
+    fontSize: '14px',
+    color: '#334155'
+  },
+  successAlert: {
+    padding: '12px 16px',
+    backgroundColor: '#dcfce7',
+    color: '#15803d',
+    border: '1px solid #bbf7d0',
+    borderRadius: '8px',
+    marginBottom: '20px',
+    fontSize: '14px',
+    fontWeight: '500'
+  },
+  errorAlert: {
+    padding: '12px 16px',
+    backgroundColor: '#fee2e2',
+    color: '#b91c1c',
+    border: '1px solid #fecaca',
+    borderRadius: '8px',
+    marginBottom: '20px',
+    fontSize: '14px',
+    fontWeight: '500'
+  },
+  modalOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    backdropFilter: 'blur(3px)',
+    display: 'flex',
+    justify: 'center',
+    alignItems: 'center',
+    zIndex: 1000
+  },
+  modalContent: {
+    backgroundColor: '#ffffff',
+    padding: '24px',
+    borderRadius: '12px',
+    width: '90%',
+    maxWidth: '640px',
+    maxHeight: '85vh',
+    overflowY: 'auto',
+    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+  },
+  closeModalBtn: {
+    backgroundColor: '#dc2626',
+    color: '#ffffff',
+    border: 'none',
+    padding: '6px 12px',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontWeight: '600',
+    fontSize: '13px'
+  },
+  revisionCard: {
+    border: '1px solid #e2e8f0',
+    borderRadius: '8px',
+    padding: '14px',
+    backgroundColor: '#f8fafc'
+  },
+  revisionSlot: {
+    display: 'flex',
+    justify: 'space-between',
+    alignItems: 'center',
+    padding: '8px 12px',
+    backgroundColor: '#ffffff',
+    borderRadius: '6px',
+    border: '1px solid #f1f5f9',
+    fontSize: '13px',
+    color: '#334155'
+  }
 };
 
 export default AdminDashboard;

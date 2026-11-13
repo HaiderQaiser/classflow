@@ -12,6 +12,7 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
     class_group_id: Optional[int] = None
+    is_active: bool = True  # Added to prevent AttributeError during registration
 
 class UserResponse(UserBase):
     id: int
@@ -30,7 +31,7 @@ class ClassGroupCreate(ClassGroupBase):
 
 class ClassGroupResponse(ClassGroupBase):
     id: int
-    created_at: Optional[datetime] = None  # Optional kar diya taake missing attribute par error na aaye
+    created_at: Optional[datetime] = None  # Optional to handle missing attributes safely
 
     class Config:
         from_attributes = True
@@ -84,6 +85,7 @@ class HolidayResponse(HolidayCreate):
 
     class Config:
         from_attributes = True
+
 class ScheduleRevisionResponse(BaseModel):
     id: int
     schedule_id: int

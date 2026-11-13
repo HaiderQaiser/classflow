@@ -25,10 +25,14 @@ const LoginPage = () => {
       // 2. Token aur User Info extract karein
       const { access_token, ...userData } = response.data;
 
-      // 3. AuthContext mein State Save Karein
+     // 3. AuthContext mein State Save Karein
       login(access_token, userData);
 
-      alert(`Welcome back, ${userData.full_name}!`);
+      const displayName = userData?.first_name 
+        ? `${userData.first_name} ${userData.last_name || ''}`.trim() 
+        : (userData?.username || 'User');
+
+      alert(`Welcome back, ${username}!`);
     } catch (err) {
       if (err.response && err.response.data && err.response.data.detail) {
         setError(err.response.data.detail);
